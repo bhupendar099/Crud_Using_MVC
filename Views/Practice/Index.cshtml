@@ -1,0 +1,242 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<center>
+    <table>
+        <tr>
+            <td>User Name</td>
+            <td><input type="text" id="txtname" /></td>
+        </tr>
+
+        <tr>
+            <td>User City</td>
+            <td><input type="text" id="txtcity" /></td>
+        </tr>
+
+        <tr>
+            <td>User Age</td>
+            <td><input type="text" id="txtage" /></td>
+        </tr>
+        <tr>
+            <td>Country</td>
+            <td>
+                <select id="ddlcountry" onchange="StateDisplay()">
+                    <option value="0">--Select--</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>State</td>
+            <td>
+                <select id="ddlstate">
+                    <option value="0">--Select--</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="button" id="btnsave" value="Submit" onclick="validation()" /></td>
+        </tr>
+    </table>
+    <table id="tbl" style="background-color:sienna; text-align:center">
+        <tr style="background-color:aquamarine">
+            <td>User ID</td>
+            <td>User Name</td>
+            <td>User City</td>
+            <td>User Age</td>
+            <td>Country</td>
+            <td>State</td>
+        </tr>
+    </table>
+</center>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script type="text/javascript">
+
+    function validation() {
+        var msg = "";
+        msg += checkname();
+        msg += checkcity();
+        msg += checkage();
+        if (msg == "") {
+            SaveUpdate();
+        } else {
+            alert(msg);
+        }
+    }
+
+    function checkname() {
+        if ($("#txtname").val() == "") {
+            return 'name required\n';
+        } else {
+            return "";
+        }
+    }
+    function checkcity() {
+        if ($("#txtcity").val() == "") {
+            return 'city required\n';
+        } else {
+            return "";
+        }
+    }
+    function checkage() {
+        if ($("#txtage").val() == "") {
+            return 'age required\n';
+        } else {
+            return "";
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    var IDDD = 0;
+    $(document).ready(function () {
+        UserDisplay();
+        CountryDisplay();
+    });
+    function SaveUpdate() {
+
+
+        $.ajax({
+            url: 'Practice/userInsert',
+            type: 'post',
+            data: {
+                Name: $("#txtname").val(),
+                City: $("#txtcity").val(),
+                Age: $("#txtage").val(),
+                UserID: IDDD,
+                Country: $("#ddlcountry").val(),
+                State: $("#ddlstate").val()
+            },
+            success: function () {
+                alert('Save successful');
+                UserDisplay();
+                Clear();
+            },
+            error: function () {
+                alert('Save failed');
+            }
+        });
+    }
+
+    function Delete(userId) {
+        $.ajax({
+            url: 'Practice/userDelete',
+            type: 'post',
+            data: { UserID: userId },
+            success: function () {
+                alert('data has been deleted successfully');
+                UserDisplay();
+
+            },
+            error: function () {
+                alert('data has  not been deleted successfully');
+            }
+        });
+    }
+
+    function CountryDisplay() {
+        $.ajax({
+            url: 'Practice/countryDisplay',
+            type: 'post',
+            data: {},
+            success: function (data) {
+                console.log(data);
+                data = JSON.parse(data);
+                $("#ddlcountry").empty();
+                $("#ddlcountry").append($('<option><option>').html("-select-").val(0));
+
+                for (var i = 0; i < data.length; i++) {
+                    $("#ddlcountry").append($('<option><option>').html(data[i].cname).val(data[i].cid));
+                }
+            },
+            error: function () {
+                alert(' data not faund ');
+            }
+        });
+    }
+    function StateDisplay() {
+        $.ajax({
+            url: 'Practice/stateDisplay',
+            type: 'post',
+            data: { Country: $("#ddlcountry").val() },
+            async: false,
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#ddlstate").empty();
+                $("#ddlstate").append($('<option><option>').html("--select--").val(0));
+                for (var i = 0; i < data.length; i++) {
+                    $("#ddlstate").append($('<option><option>').html(data[i].sname).val(data[i].sid));
+                }
+            },
+            error: function () {
+                alert(' data not faund ');
+            }
+        });
+    }
+
+    function UserDisplay() {
+        $.ajax({
+            url: 'Practice/userDisplay',
+            type: 'post',
+            data: {},
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#tbl").find("tr:gt(0)").remove();
+                for (var i = 0; i < data.length; i++) {
+                    $("#tbl").append('<tr> <td> ' + data[i].userId + '</td> <td> ' + data[i].userName + '</td> <td> ' + data[i].userCity + '</td>  <td> ' + data[i].userAge + '</td> <td> ' + data[i].cname + '</td> <td> ' + data[i].sname + '</td> <td><input type="button" id="btndelete"  value="Delete"  onclick="Delete(' + data[i].userId + ')"/></td><td><input type="button" id="btnEdit" value="Edit" onclick="Edit(' + data[i].userId + ')"/></td ></tr>');
+                }
+            },
+            error: function () {
+                alert(' data not faund ');
+            }
+        });
+    }
+
+    function Clear() {
+        $("#txtname").val("");
+        $("#txtcity").val("");
+
+        $("#txtage").val("");
+        $("#ddlcountry").val("0");
+        $("#ddlstate").val("0");
+        $("#btnsave").val("Submit");
+        IDDD = 0;
+    }
+
+
+    function Edit(userId) {
+        $.ajax({
+            url: 'Practice/userEdit',
+            type: 'post',
+            data: { UserID: userId },
+            async: false,
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#txtname").val(data[0].userName);
+                $("#txtcity").val(data[0].userCity);
+                $("#txtage").val(data[0].userAge);
+                $("#ddlcountry").val(data[0].country);
+                stateDisplay();
+                $("#ddlstate").val(data[0].state);
+                $("#btnsave").val("update");
+                IDDD = userId;
+            },
+            error: function () {
+                alert('data has  not been edited successfully');
+            }
+        });
+    }
+</script>
